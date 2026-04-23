@@ -1,0 +1,17 @@
+# This compose file is specifically for the FinOps SaaS Demo
+services:
+  floci:
+    image: floci/floci:latest
+    ports:
+      - "4566:4566"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/app/data
+    environment:
+      - FLOCI_STORAGE_MODE=memory # Fast for demo
+      - FLOCI_DEFAULT_REGION=us-east-1
+      - FLOCI_SERVICES_LAMBDA_DOCKER_NETWORK=finops-network
+
+networks:
+  finops-network:
+    external: false
