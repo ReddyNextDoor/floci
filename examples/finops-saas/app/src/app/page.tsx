@@ -17,9 +17,12 @@ import {
 
 // --- Types ---
 type Tenant = 'Acme Corp' | 'Globex';
+type Tab = 'Overview' | 'Analytics' | 'Cost' | 'Security';
 
 export default function Dashboard() {
   const [activeTenant, setActiveTenant] = useState<Tenant>('Acme Corp');
+  const [activeTab, setActiveTab] = useState<Tab>('Overview');
+  const [showTenantMenu, setShowTenantMenu] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [metrics, setMetrics] = useState({ cpu: 42, cost: 420, latency: 96 });
 
@@ -57,19 +60,66 @@ export default function Dashboard() {
         </div>
 
         <nav className="flex-1 flex flex-col gap-2">
-          <NavItem icon={<LayoutDashboard size={20} />} label="Overview" active />
-          <NavItem icon={<Activity size={20} />} label="Analytics" />
-          <NavItem icon={<DollarSign size={20} />} label="Cost Management" />
-          <NavItem icon={<ShieldCheck size={20} />} label="Security" />
+          <NavItem 
+            icon={<LayoutDashboard size={20} />} 
+            label="Overview" 
+            active={activeTab === 'Overview'} 
+            onClick={() => setActiveTab('Overview')}
+          />
+          <NavItem 
+            icon={<Activity size={20} />} 
+            label="Analytics" 
+            active={activeTab === 'Analytics'} 
+            onClick={() => setActiveTab('Analytics')}
+          />
+          <NavItem 
+            icon={<DollarSign size={20} />} 
+            label="Cost Management" 
+            active={activeTab === 'Cost'} 
+            onClick={() => setActiveTab('Cost')}
+          />
+          <NavItem 
+            icon={<ShieldCheck size={20} />} 
+            label="Security" 
+            active={activeTab === 'Security'} 
+            onClick={() => setActiveTab('Security')}
+          />
         </nav>
 
         <div className="mt-auto pt-6 border-t border-slate-800">
           <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2">Tenant Selector</label>
           <div className="mt-2 relative">
-            <button className="w-full flex items-center justify-between px-3 py-2 bg-slate-800 rounded-lg border border-slate-700 hover:border-indigo-500 transition-colors">
+            <button 
+              onClick={() => setShowTenantMenu(!showTenantMenu)}
+              className="w-full flex items-center justify-between px-3 py-2 bg-slate-800 rounded-lg border border-slate-700 hover:border-indigo-500 transition-colors"
+            >
               <span className="font-medium text-sm">{activeTenant}</span>
-              <ChevronDown size={16} className="text-slate-500" />
+              <ChevronDown size={16} className={`text-slate-500 transition-transform ${showTenantMenu ? 'rotate-180' : ''}`} />
             </button>
+            
+            <AnimatePresence>
+              {showTenantMenu && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute bottom-full left-0 w-full mb-2 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden shadow-2xl z-50"
+                >
+                  {(['Acme Corp', 'Globex'] as Tenant[]).map(t => (
+                    <button
+                      key={t}
+                      onClick={() => {
+                        setActiveTenant(t);
+                        setShowTenantMenu(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-indigo-500 transition-colors ${activeTenant === t ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-300'}`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </aside>
@@ -114,72 +164,100 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Optimization Panel */}
-          <section className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 backdrop-blur-sm">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-bold">Infrastructure Optimization</h2>
-              {isSimulating && (
-                <motion.button 
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  onClick={applyOptimization}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20"
-                >
-                  Apply Changes →
-                </motion.button>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-8 relative">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-700 font-bold text-sm">VS</div>
-              <div className="p-6 rounded-xl bg-slate-950 border border-slate-800">
-                <span className="text-xs font-bold text-slate-500 uppercase mb-4 block">Current Infra</span>
-                <p className="font-bold text-lg mb-1">EKS-Cluster-Prod</p>
-                <p className="text-sm text-slate-400 mb-4">c6g.4xlarge</p>
-                <div className="text-2xl font-bold text-slate-200">$12,800/mo</div>
-              </div>
-              <div className="p-6 rounded-xl bg-indigo-500/5 border border-indigo-500/20">
-                <span className="text-xs font-bold text-indigo-400 uppercase mb-4 block">Recommended</span>
-                <p className="font-bold text-lg mb-1">EKS-Cluster-Opti</p>
-                <p className="text-sm text-slate-400 mb-4">c6g.2xlarge</p>
-                <div className="text-2xl font-bold text-indigo-400">$9,150/mo</div>
-                <div className="text-xs text-emerald-400 font-medium mt-1">v 28.5% savings</div>
-              </div>
-            </div>
-          </section>
-
-          {/* Simulation Controls */}
-          <section className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 backdrop-blur-sm">
-            <h2 className="text-xl font-bold mb-8">Simulation Controls</h2>
-            <div className="flex flex-col gap-6">
-              <div className="p-6 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                <div>
-                  <p className="font-bold mb-1">Scenario: Traffic Spike</p>
-                  <p className="text-sm text-slate-400">Onboard 10k users for {activeTenant}</p>
+        {/* Dashboard Content Switching */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'Overview' ? (
+            <motion.div 
+              key="overview"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+            >
+              {/* Optimization Panel */}
+              <section className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 backdrop-blur-sm">
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="text-xl font-bold">Infrastructure Optimization</h2>
+                  {isSimulating && (
+                    <motion.button 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      onClick={applyOptimization}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20"
+                    >
+                      Apply Changes →
+                    </motion.button>
+                  )}
                 </div>
-                <button 
-                  onClick={triggerSpike}
-                  disabled={isSimulating}
-                  className="bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-bold transition-all border border-slate-700"
-                >
-                  Run Simulation
-                </button>
+
+                <div className="grid grid-cols-2 gap-8 relative">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-700 font-bold text-sm">VS</div>
+                  <div className="p-6 rounded-xl bg-slate-950 border border-slate-800">
+                    <span className="text-xs font-bold text-slate-500 uppercase mb-4 block">Current Infra</span>
+                    <p className="font-bold text-lg mb-1">EKS-Cluster-Prod</p>
+                    <p className="text-sm text-slate-400 mb-4">c6g.4xlarge</p>
+                    <div className="text-2xl font-bold text-slate-200">$12,800/mo</div>
+                  </div>
+                  <div className="p-6 rounded-xl bg-indigo-500/5 border border-indigo-500/20">
+                    <span className="text-xs font-bold text-indigo-400 uppercase mb-4 block">Recommended</span>
+                    <p className="font-bold text-lg mb-1">EKS-Cluster-Opti</p>
+                    <p className="text-sm text-slate-400 mb-4">c6g.2xlarge</p>
+                    <div className="text-2xl font-bold text-indigo-400">$9,150/mo</div>
+                    <div className="text-xs text-emerald-400 font-medium mt-1">v 28.5% savings</div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Simulation Controls */}
+              <section className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 backdrop-blur-sm">
+                <h2 className="text-xl font-bold mb-8">Simulation Controls</h2>
+                <div className="flex flex-col gap-6">
+                  <div className="p-6 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                    <div>
+                      <p className="font-bold mb-1">Scenario: Traffic Spike</p>
+                      <p className="text-sm text-slate-400">Onboard 10k users for {activeTenant}</p>
+                    </div>
+                    <button 
+                      onClick={triggerSpike}
+                      disabled={isSimulating}
+                      className="bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-bold transition-all border border-slate-700"
+                    >
+                      Run Simulation
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="stub"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex flex-col items-center justify-center py-20 bg-slate-900/40 border border-slate-800 rounded-2xl border-dashed"
+            >
+              <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                <Activity className="w-8 h-8 text-slate-600" />
               </div>
-            </div>
-          </section>
-        </div>
+              <h3 className="text-xl font-bold mb-2">{activeTab} Details Coming Soon</h3>
+              <p className="text-slate-500">The multi-tenant logic for {activeTenant} is active, but this tab view is in development.</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
 }
 
-function NavItem({ icon, label, active = false }: { icon: React.ReactNode, label: string, active?: boolean }) {
+function NavItem({ icon, label, active = false, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick?: () => void }) {
   return (
-    <a href="#" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${active ? 'bg-indigo-500/10 text-indigo-400 font-semibold' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}>
+    <button 
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${active ? 'bg-indigo-500/10 text-indigo-400 font-semibold' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+    >
       {icon}
       <span className="text-sm">{label}</span>
-    </a>
+    </button>
   );
 }
 

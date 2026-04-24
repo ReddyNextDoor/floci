@@ -152,6 +152,25 @@ class LambdaIntegrationTest {
             .statusCode(400);
     }
 
+    @Test
+    @Order(8)
+    void createFunctionMissingHandler_returns400() {
+        given()
+            .contentType("application/json")
+            .body("""
+                {
+                    "FunctionName": "no-handler-fn",
+                    "Runtime": "nodejs20.x",
+                    "Role": "arn:aws:iam::000000000000:role/lambda-role"
+                }
+                """)
+        .when()
+            .post(BASE_PATH + "/functions")
+        .then()
+            .statusCode(400)
+            .body("message", containsString("Handler is required"));
+    }
+
     // ── Issue #439: LastUpdateStatus in responses ─────────────────────
 
     @Test
@@ -194,6 +213,23 @@ class LambdaIntegrationTest {
             .body("Environment.Variables.MY_KEY", equalTo("my-value"))
             .body("Environment.Variables.ANOTHER_KEY", equalTo("another-value"))
             .body("RevisionId", notNullValue());
+    }
+
+    @Test
+    @Order(10)
+    void updateFunctionConfiguration_emptyHandler_returns400() {
+        given()
+            .contentType("application/json")
+            .body("""
+                {
+                    "Handler": ""
+                }
+                """)
+        .when()
+            .put(BASE_PATH + "/functions/hello-world/configuration")
+        .then()
+            .statusCode(400)
+            .body("message", containsString("Handler is required"));
     }
 
     @Test

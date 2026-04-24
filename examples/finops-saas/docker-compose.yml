@@ -1,16 +1,24 @@
 # This compose file is specifically for the FinOps SaaS Demo
 services:
   floci:
-    image: floci/floci:latest
+    image: hectorvent/floci:latest
     ports:
-      - "4566:4566"
+      - "4566:4566"            # Floci API
+      - "6379:6379"            # Redis Proxy
+      - "7100-7110:7100-7110"  # RDS Proxy Range (Avoids AirPlay on 7000)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./data:/app/data
+      - floci-data:/app/data
     environment:
       - FLOCI_STORAGE_MODE=memory # Fast for demo
       - FLOCI_DEFAULT_REGION=us-east-1
+      - FLOCI_SERVICES_RDS_PROXY_BASE_PORT=7100
+      - FLOCI_SERVICES_RDS_PROXY_MAX_PORT=7110
       - FLOCI_SERVICES_LAMBDA_DOCKER_NETWORK=finops-network
+      - FLOCI_STORAGE_HOST_PERSISTENT_PATH=floci-data
+
+volumes:
+  floci-data:
 
 networks:
   finops-network:

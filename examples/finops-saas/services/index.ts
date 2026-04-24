@@ -7,7 +7,7 @@ const app = new Hono()
 // Infrastructure Connections (Simulated endpoints in Floci)
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379')
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://admin:password123@localhost:5432/finops-saas-db'
+  connectionString: process.env.DATABASE_URL || 'postgresql://admin:password123@localhost:7100/finops-saas-db'
 })
 
 // --- Middleware: Multi-Tenant Isolation ---
@@ -64,6 +64,15 @@ app.get('/recommendations', async (c) => {
   }
   
   return c.json({ recommendations: [] })
+})
+
+import { serve } from '@hono/node-server'
+
+serve({
+  fetch: app.fetch,
+  port: 3001
+}, (info) => {
+  console.log(`Server is running on http://localhost:${info.port}`)
 })
 
 export default app

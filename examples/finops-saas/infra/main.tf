@@ -8,13 +8,14 @@ provider "aws" {
   skip_requesting_account_id  = true
 
   endpoints {
-    apigateway   = "http://localhost:4566"
-    lambda       = "http://localhost:4566"
-    rds          = "http://localhost:4566"
-    elasticache  = "http://localhost:4566"
-    iam          = "http://localhost:4566"
-    sts          = "http://localhost:4566"
-    cloudwatch   = "http://localhost:4566"
+    apigateway     = "http://localhost:4566"
+    apigatewayv2   = "http://localhost:4566"
+    lambda         = "http://localhost:4566"
+    rds            = "http://localhost:4566"
+    elasticache    = "http://localhost:4566"
+    iam            = "http://localhost:4566"
+    sts            = "http://localhost:4566"
+    cloudwatch     = "http://localhost:4566"
   }
 }
 
@@ -31,13 +32,14 @@ resource "aws_db_instance" "tenant_db" {
 }
 
 # -- Tier 6: Cache (ElastiCache Redis) --
-resource "aws_elasticache_cluster" "metrics_cache" {
-  cluster_id           = "finops-metrics-cache"
-  engine               = "redis"
-  node_type            = "cache.t3.micro"
-  num_cache_nodes      = 1
-  parameter_group_name = "default.redis7"
-  port                 = 6379
+resource "aws_elasticache_replication_group" "metrics_cache" {
+  replication_group_id          = "finops-metrics"
+  description                   = "FinOps Metrics Cache"
+  node_type                     = "cache.t3.micro"
+  port                          = 6379
+  parameter_group_name          = "default.redis7"
+  automatic_failover_enabled    = false
+  num_cache_clusters            = 1
 }
 
 # -- Tier 2: API Gateway (v2) --

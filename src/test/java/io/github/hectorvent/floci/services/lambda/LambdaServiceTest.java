@@ -78,6 +78,15 @@ class LambdaServiceTest {
     }
 
     @Test
+    void createFunctionFailsWhenMissingHandler() {
+        Map<String, Object> req = baseRequest("x");
+        req.remove("Handler");
+        AwsException ex = assertThrows(AwsException.class, () -> service.createFunction(REGION, req));
+        assertEquals("InvalidParameterValueException", ex.getErrorCode());
+        assertTrue(ex.getMessage().contains("Handler is required"));
+    }
+
+    @Test
     void createFunctionFailsForDuplicate() {
         service.createFunction(REGION, baseRequest("dup"));
         AwsException ex = assertThrows(AwsException.class,
@@ -299,6 +308,17 @@ class LambdaServiceTest {
         // Updating with no-op (no zip or image uri) still bumps revision
         LambdaFunction updated = service.updateFunctionCode(REGION, "update-fn", Map.of());
         assertNotEquals(originalRevision, updated.getRevisionId());
+    }
+
+    @Test
+    void updateFunctionConfigurationFailsWithBlankHandler() {
+        service.createFunction(REGION, baseRequest("update-handler-fn"));
+        
+        Map<String, Object> req = new java.util.HashMap<>(Map.of("Handler", ""));
+        AwsException ex = assertThrows(AwsException.class, 
+                () -> service.updateFunctionConfiguration(REGION, "update-handler-fn", req));
+        assertEquals("InvalidParameterValueException", ex.getErrorCode());
+        assertTrue(ex.getMessage().contains("Handler is required"));
     }
 
     @Test

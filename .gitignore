@@ -13,6 +13,10 @@ data/
 .DS_Store
 .zed/settings.json
 .kiro/
+.m2/
+node_modules/
+.next/
+dist/
 
 CLAUDE.md
 GEMINI.md
@@ -29,5 +33,15 @@ test-results.xml
 
 *.log
 
-#feature-branches
+# feature-branches
 examples/concepts.md
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Logs
+**/*.log
+examples/finops-saas/run_logs/
